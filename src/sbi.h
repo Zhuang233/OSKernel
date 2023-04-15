@@ -1,5 +1,6 @@
 #ifndef _SBI_H
 #define _SBI_H
+#include "types.h"
 // 参考sbi二进制接口规范编写
 // Legacy Extensions
 // a7 是 SBI extension ID ,a6不用
@@ -45,5 +46,7 @@
 #define GETCHAR SBI_ECALL_0(SBI_CONSOLE_GETCHAR)
 #define SHUTDOWN SBI_ECALL_0(SBI_SHUTDOWN)
 
+
+extern uint64 sbi_set_timer(uint64 stime_value);
 
 #endif

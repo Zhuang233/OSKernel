@@ -1,7 +1,7 @@
 #ifndef __RISCV__
 #define __RISCV__
 
-#define uint64 unsigned long
+# include "types.h"
 
 // which hart (core) is this?
 static inline uint64

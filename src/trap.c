@@ -3,8 +3,12 @@
 #include "printf.h"
 
 #define SCAUSE_EC (0xf) /* 支持16个异常*/
+#define SOFT_INT 1
+#define TIMER_INT 5
+#define EX_INT 9
 
 extern void do_exception_vector(void);
+extern void timer_reset(void);
 
 struct fault_info {
 	int (*fn)(struct pt_regs *regs, const char *name);
@@ -94,11 +98,22 @@ void do_exception(struct pt_regs *regs, unsigned long scause)
 {
 	const struct fault_info *inf;
 
-	printf("%s, scause:%p\n", __func__, scause);
+	// printf("%s, scause:%p\n", __func__, scause);
 
 	if (scause & SCAUSE_INT) {
 		// 中断异常处理
-
+		switch (scause & ~SCAUSE_INT)
+		{
+		case SOFT_INT:
+			soft_irq_handle();break;
+		case TIMER_INT:
+			timer_irq_handle();break;
+		case EX_INT:
+			ex_irq_handle();break;
+		default:
+			panic("unknown interrupt type");
+			break;
+		}
 	} else {
 		// 其他异常报错
 		inf = ec_to_fault_info(scause);
@@ -106,6 +121,27 @@ void do_exception(struct pt_regs *regs, unsigned long scause)
 			return;
 	}
 }
+
+// 定时器中断处理函数
+void timer_irq_handle(){
+	printf("timer_int\n");
+	//todo:安排进程调度等工作
+
+	timer_reset();
+}
+
+// 软件中断处理函数
+void soft_irq_handle(){
+	//todo:
+	panic("soft_irq todo");
+}
+
+// 外部中断处理函数
+void ex_irq_handle(){
+	//todo:
+	panic("ex_irq todo");
+}
+
 
 void trap_init(void)
 {

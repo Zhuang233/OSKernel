@@ -6,6 +6,7 @@
         "memory": "c",
         "new": "c",
         "numeric": "c",
-        "system_error": "c"
+        "system_error": "c",
+        "types.h": "c"
     }
 }
