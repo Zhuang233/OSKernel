@@ -1,7 +1,7 @@
 BUILDDIR = build
 SRCDIR = src
 CC = riscv64-unknown-elf-gcc
-CFLAGS = -nostdlib
+CFLAGS = -nostdlib -fno-builtin #不使用标准库 不识别内建函数
 LD = riscv64-unknown-elf-ld
 LDFLAGS = -T link.ld
 SBI = SBI/rustsbi-qemu

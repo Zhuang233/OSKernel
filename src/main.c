@@ -1,11 +1,17 @@
 #include "sbi.h"
+#include "printf.h"
+
 void main()
 {
-    SBI_PUTCHAR('H');
-    SBI_PUTCHAR('e');
-    SBI_PUTCHAR('l');
-    SBI_PUTCHAR('l');
-    SBI_PUTCHAR('o');
-    SBI_PUTCHAR('\n');
-    while(1) {}
+    char a;
+    int num = 52010420; 
+        
+        a = GETCHAR;
+        putchar(a);
+        putchar(a);
+        putchar('\n');
+        printf("%d\t %x\n",num,num);
+        panic("panic test");
+
 }
+
