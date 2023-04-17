@@ -1,7 +1,7 @@
 BUILDDIR = build
 SRCDIR = src
 CC = riscv64-unknown-elf-gcc
-CFLAGS = -nostdlib -fno-builtin #不使用标准库 不识别内建函数
+CFLAGS = -g -nostdlib -fno-builtin #不使用标准库 不识别内建函数
 LD = riscv64-unknown-elf-ld
 LDFLAGS = -T link.ld
 SBI = SBI/rustsbi-qemu
@@ -11,9 +11,16 @@ SRCS_S := $(shell find ./src -name "*.s")
 SRCS_C := $(shell find ./src -name "*.c")
 SRCS = $(SRCS_C) $(SRCS_S)
 OBJS = $(addprefix $(BUILDDIR)/, $(notdir $(addsuffix .o, $(basename $(SRCS))))) # basename去前缀，addsuffix加后缀，addprefix加前缀，得到目标.o文件及其路径
+# try to generate a unique GDB port
+GDBPORT = $(shell expr `id -u` % 5000 + 25000)
+# QEMU's gdb stub command line changed in 0.11
+QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
+	then echo "-gdb tcp::$(GDBPORT)"; \
+	else echo "-s -p $(GDBPORT)"; fi)
 
 .PHONY: all
 all: $(BUILDDIR) $(BUILDDIR)/kernel
+	riscv64-unknown-elf-objdump -d $(BUILDDIR)/kernel > $(BUILDDIR)/kernel.asm
 
 $(BUILDDIR):
 	@mkdir $(BUILDDIR) 
@@ -31,6 +38,8 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.s
 run: all
 	$(QEMU) $(QEMUFLAGS) -bios $(SBI)
 
+gdb:
+	$(QEMU) $(QEMUFLAGS) -bios $(SBI) -S $(QEMUGDB)
 .PHONY: clean
 clean:
 	@rm -rf $(BUILDDIR)

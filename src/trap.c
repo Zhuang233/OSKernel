@@ -94,6 +94,26 @@ static inline const struct fault_info *ec_to_fault_info(unsigned int scause)
 	return fault_info + (scause & SCAUSE_EC);
 }
 
+// 定时器中断处理函数
+void timer_irq_handle(){
+	printf("timer_int\n");
+	//todo:安排进程调度等工作
+
+	timer_reset();
+}
+
+// 软件中断处理函数
+void soft_irq_handle(){
+	//todo:
+	panic("soft_irq todo");
+}
+
+// 外部中断处理函数
+void ex_irq_handle(){
+	//todo:
+	panic("ex_irq todo");
+}
+
 void do_exception(struct pt_regs *regs, unsigned long scause)
 {
 	const struct fault_info *inf;
@@ -122,32 +142,11 @@ void do_exception(struct pt_regs *regs, unsigned long scause)
 	}
 }
 
-// 定时器中断处理函数
-void timer_irq_handle(){
-	printf("timer_int\n");
-	//todo:安排进程调度等工作
-
-	timer_reset();
-}
-
-// 软件中断处理函数
-void soft_irq_handle(){
-	//todo:
-	panic("soft_irq todo");
-}
-
-// 外部中断处理函数
-void ex_irq_handle(){
-	//todo:
-	panic("ex_irq todo");
-}
-
-
 void trap_init(void)
 {
 	w_sscratch(0);
 	/* 设置异常向量表地址 */
-	w_stvec(do_exception_vector);
+	w_stvec((uint64)do_exception_vector);
 	printf("stvec=%p, %p\n", r_stvec(), do_exception_vector);
 	/* 使能所有中断 */
 	w_sie(-1);
