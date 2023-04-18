@@ -2,6 +2,7 @@
 #include "printf.h"
 #include "riscv.h"
 #include "memory.h"
+#include "kalloc.h"
 
 extern void trap_init(void);
 extern void timer_init(void);
@@ -13,6 +14,10 @@ void main()
         trap_init();
         // timer_init();
         kmeminit();
+        void*r[10];
+        for(int i=0;i<10;i++){
+            r[i]=kalloc();
+        }
         // a = r_sstatus();
         // printf("sstatus = %p",a);
         // putchar('a');

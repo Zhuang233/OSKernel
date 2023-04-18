@@ -10,5 +10,6 @@
 
 
 extern void kmeminit(void);
+extern void memset(void* dest, int size, char val);
 
 #endif
