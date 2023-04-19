@@ -23,65 +23,6 @@ struct buddy {
 extern char end[]; // first address after kernel.
                    // defined by kernel.ld.
 
-// struct run {
-//   struct run *next;
-// };
-
-// struct {
-//   struct run *freelist; //空闲内存链表
-// } kmem;
-
-// //free掉start到end间的物理页
-// void
-// freerange(void *pa_start, void *pa_end)
-// {
-//   char *p;
-//   p = (char*)PG_ALIGN_DOWN((uint64)pa_start);
-//   for(; p <= (char*)pa_end; p += PAGE_SIZE)
-//     kfree(p);
-// }
-
-// // Free the page of physical memory pointed at by pa,
-// // which normally should have been returned by a
-// // call to kalloc().  (The exception is when
-// // initializing the allocator; see kinit above.)
-// void
-// kfree(void *pa)
-// {
-//   struct run *r;
-
-//   if((uint64)pa < PG_ALIGN_UP((uint64)end) || (uint64)pa >= PMTOP)
-//     panic("kfree");
-
-//   // 填充垃圾数据
-//   // Fill with junk to catch dangling refs.
-//   memset(pa, PAGE_SIZE, 1);
-
-//   r = (struct run*)PG_ALIGN_DOWN((uint64)pa);
-//   //头插法将该页加入空闲链表
-//   r->next = kmem.freelist;
-//   kmem.freelist = r;
-// }
-
-// // 申请一个内存页（内核使用）
-// // Allocate one 4096-byte page of physical memory.
-// // Returns a pointer that the kernel can use.
-// // Returns 0 if the memory cannot be allocated.
-// void *kalloc(void)
-// {
-//   struct run *r;
-
-//   // 从空闲内存链表头部取一块出来使用
-//   r = kmem.freelist;
-//   if(r)
-//     kmem.freelist = r->next;
-
-//   if(r)
-//     memset((char*)r, PAGE_SIZE, 5); // fill with junk 填充垃圾 （安全措施）
-//   return (void*)r;
-// }
-
-
 // 申请内存大小修正为2的次方
 static uint64 fixsize(uint64 size) {
   size |= size >> 1;
@@ -124,7 +65,7 @@ uint64 buddy_alloc(uint64 size) {
 
   if(offset != 0){
     // 空间抹0
-    memset((void*)KBASE + offset * PAGE_SIZE, size, 5);
+    memset((void*)KBASE + offset * PAGE_SIZE, size*PAGE_SIZE, 5);
   }
 
 
@@ -194,7 +135,7 @@ uint64 buddy_size(uint64 addr) {
   for (index = offset + bd.size - 1; bd.longest[index] ; index = PARENT(index))
     node_size *= 2;
 
-  return node_size;
+  return node_size*PAGE_SIZE;
 }
 
 void buddy_init() {

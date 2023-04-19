@@ -19,13 +19,3 @@ void memcopy(){
 
 }
 
-
-
-
-// void kmeminit(){
-//     sfence_vma();
-//     freerange(end+PAGE_SIZE-1, (void*)(PMTOP-1));
-//     // sfence_vma();
-// }
-
-

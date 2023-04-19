@@ -12,12 +12,21 @@ void main()
     char a;
     int num = 52010420; 
         trap_init();
+        // unsigned long i;
+        // for(i=65500;;i++){
+        //     printf("%d\n",i);
+        // }
+        buddy_init();
+        printf("kernel buddy size:%d\n",buddy_size(0x80000000));
+        printf("kernel buddy size:%d\n",buddy_size(0x80000000));
+        buddy_alloc(5);
+        
         // timer_init();
-        kmeminit();
-        void*r[10];
-        for(int i=0;i<10;i++){
-            r[i]=kalloc();
-        }
+        // kmeminit();
+        // void*r[10];
+        // for(int i=0;i<10;i++){
+        //     r[i]=kalloc();
+        // }
         // a = r_sstatus();
         // printf("sstatus = %p",a);
         // putchar('a');
