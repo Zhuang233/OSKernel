@@ -18,6 +18,5 @@ halt:
 .global stack_top      # 定义全局标号stack_top
 
 # 堆栈段
+.space 4096 * 4
 stack_top:
-    .space 4096 * 4
-    .global stack_top
