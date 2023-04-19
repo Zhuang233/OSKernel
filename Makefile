@@ -1,4 +1,6 @@
 BUILDDIR = build
+DUMP = riscv64-unknown-elf-objdump
+DUMPDIR = dump
 SRCDIR = src
 CC = riscv64-unknown-elf-gcc
 CFLAGS = -g -nostdlib -fno-builtin #不使用标准库 不识别内建函数
@@ -19,8 +21,8 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 	else echo "-s -p $(GDBPORT)"; fi)
 
 .PHONY: all
-all: $(BUILDDIR) $(BUILDDIR)/kernel
-	riscv64-unknown-elf-objdump -d $(BUILDDIR)/kernel > $(BUILDDIR)/kernel.asm
+all: $(BUILDDIR) $(BUILDDIR)/kernel dump
+
 
 $(BUILDDIR):
 	@mkdir $(BUILDDIR) 
@@ -34,15 +36,30 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 $(BUILDDIR)/%.o: $(SRCDIR)/%.s
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: all
+# 运行
+.PHONY: run
 run: all
 	$(QEMU) $(QEMUFLAGS) -bios $(SBI)
 
+# 生成目标文件信息
+.PHONY: dump
+dump:
+	@mkdir -p $(DUMPDIR)
+	$(DUMP) -d $(BUILDDIR)/kernel > $(DUMPDIR)/kernel.asm
+	$(DUMP) -S $(BUILDDIR)/kernel > $(DUMPDIR)/kernel.s
+	$(DUMP) -t $(BUILDDIR)/kernel | grep '^[0-9]' | sort > $(DUMPDIR)/kernel.sym
+	readelf -s $(BUILDDIR)/kernel >>$(DUMPDIR)/kernel.sym
+	$(DUMP) -h $(BUILDDIR)/kernel > $(DUMPDIR)/kernel.sections
+	size -x $(BUILDDIR)/kernel >> $(DUMPDIR)/kernel.sections
+# 远程调试
+.PHONY: gdb
 gdb:
 	$(QEMU) $(QEMUFLAGS) -bios $(SBI) -S $(QEMUGDB)
+
+# 项目清理
 .PHONY: clean
 clean:
-	@rm -rf $(BUILDDIR)
+	@rm -rf $(BUILDDIR) $(DUMPDIR)
 
 .PHONY: echo
 echo:
