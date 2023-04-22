@@ -6,7 +6,7 @@
 extern void trap_init(void);
 extern void timer_init(void);
 
-void main()
+void main2()
 {
         buddy_init();
         printf("kernel buddy size:%d\n",buddy_size(KBASE));

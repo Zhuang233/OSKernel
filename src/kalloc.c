@@ -65,7 +65,7 @@ uint64 buddy_alloc(uint64 size) {
 
   if(offset != 0){
     // 空间抹0
-    memset((void*)KBASE + offset * PAGE_SIZE, size*PAGE_SIZE, 5);
+    memset((void*)KBASE + offset * PAGE_SIZE, size*PAGE_SIZE, 0);
   }
 
 
