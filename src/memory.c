@@ -5,6 +5,7 @@
 #include "kalloc.h"
 
 extern char end[];
+ptb_t kptb;
 
 // 物理内存填充size字节
 void memset(void *dest, uint64 size, char val)
@@ -64,8 +65,10 @@ void mapper(ptb_t pagetable, uint64 va, uint64 pa, int size, uint16 flags)
 void kvminit()
 {
     // 建立内核代码区直接映射
-    ptb_t kptb = (ptb_t)buddy_alloc(1);
+    kptb = (ptb_t)buddy_alloc(1);
     mapper(kptb, KBASE, KBASE, KPAGE_NUM, PTE_V | PTE_R | PTE_W | PTE_X);
+    // 其他内存区直接映射
+    mapper(kptb, (uint64)end, (uint64)end, PMSIZE/PAGE_SIZE - KPAGE_NUM, PTE_V | PTE_R | PTE_W | PTE_X);
 
     sfence_vma();
     //写satp寄存器，让cpu知道内核页表的首地址在哪
