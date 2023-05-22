@@ -18,10 +18,17 @@ void memset(void *dest, uint64 size, char val)
 }
 
 // 物理内存搬移
-void memcopy()
+void memcopy(void *dest, void *src, uint64 size)
 {
+    char *d = (char *)dest;
+    char *s = (char *)src;
+    for (uint64 i = 0; i < size; i++)
+    {
+        d[i] = s[i];
+    }
 }
 
+// 模拟mmu,获取页表项
 pte_t *walk(ptb_t pagetable, uint64 va, int alloc)
 {
     uint8 level = 2;
@@ -46,6 +53,27 @@ pte_t *walk(ptb_t pagetable, uint64 va, int alloc)
     return &pagetable[PX(0, va)]; // 取出表项
 }
 
+// 查找映射后的物理地址
+uint64 walkaddr(ptb_t pagetable, uint64 va)
+{
+  pte_t *pte;
+  uint64 pa;
+
+  if(va >= MAXVA)
+    return 0;
+
+  pte = walk(pagetable, va, 0);
+  if(pte == 0)
+    return 0;
+  if((*pte & PTE_V) == 0)
+    return 0;
+  if((*pte & PTE_U) == 0)
+    return 0;
+  pa = PTE2PA(*pte);
+  return pa;
+}
+
+// 创建va,pa映射
 void mapper(ptb_t pagetable, uint64 va, uint64 pa, int size, uint16 flags)
 {
     flags = PTE_FLAGS(flags);
@@ -61,6 +89,41 @@ void mapper(ptb_t pagetable, uint64 va, uint64 pa, int size, uint16 flags)
         }
     }
 }
+
+// 撤销va,pa映射
+void unmap(ptb_t pagetable, uint64 va, uint64 size, int free)
+{
+    uint64 a;
+    pte_t *pte;
+
+    if((va % PAGE_SIZE) != 0)
+        panic("unmap: not aligned");
+
+    for(a = va; a < va + size*PAGE_SIZE; a += PAGE_SIZE){
+        if((pte = walk(pagetable, a, 0)) == 0)
+            panic("unmap: walk");
+        if((*pte & PTE_V) == 0)
+            panic("unmap: not mapped");
+        if(PTE_FLAGS(*pte) == PTE_V)
+            panic("unmap: not a leaf");
+        if(free){
+            uint64 pa = PTE2PA(*pte);
+            buddy_free(pa);
+    }
+    *pte = 0;
+    }
+}
+
+// 创建用户页表
+ptb_t creat_pagetable(){
+    // 创建一个空页表
+    ptb_t pagetable = (ptb_t)buddy_alloc(1);
+    if(pagetable == -1){
+        return -1;
+    }
+    return pagetable;
+}
+
 
 void kvminit()
 {
