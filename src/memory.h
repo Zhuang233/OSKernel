@@ -36,7 +36,7 @@
 // MAXVA实际上比Sv39允许的最大值小一位，以避免必须对具有高位设置的虚拟地址进行符号扩展。
 #define MAXVA (1L << (9 + 9 + 9 + 12 - 1))
 
-extern void mapper(ptb_t pagetable, uint64 va, uint64 pa, int size, uint16 flags);
+extern int mapper(ptb_t pagetable, uint64 va, uint64 pa, int size, uint16 flags);
 extern void kvminit(void);
 extern void memset(void* dest, uint64 size, char val);
 

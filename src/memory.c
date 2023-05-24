@@ -17,42 +17,6 @@ void memset(void *dest, uint64 size, char val)
     }
 }
 
-// Given a parent process's page table, copy
-// its memory into a child's page table.
-// Copies both the page table and the
-// physical memory.
-// returns 0 on success, -1 on failure.
-// frees any allocated pages on failure.
-int
-uvmcopy(ptb_t old, ptb_t new, uint64 sz)
-{
-  pte_t *pte;
-  uint64 pa, i;
-  uint flags;
-  char *mem;
-
-  for(i = 0; i < sz; i += PAGE_SIZE){
-    if((pte = walk(old, i, 0)) == 0)
-      panic("uvmcopy: pte should exist");
-    if((*pte & PTE_V) == 0)
-      panic("uvmcopy: page not present");
-    pa = PTE2PA(*pte);
-    flags = PTE_FLAGS(*pte);
-    if((mem = buddy_alloc(1)) == -1)
-      goto err;
-    memcopy(mem, (char*)pa, PAGE_SIZE);
-    if(mapper(new, i, (uint64)mem, PAGE_SIZE, flags) != 0){
-      buddy_free(mem);
-      goto err;
-    }
-  }
-  return 0;
-
- err:
-  unmap(new, 0, i / PAGE_SIZE, 1);
-  return -1;
-}
-
 // 物理内存搬移
 void memcopy(void *dest, void *src, uint64 size)
 {
@@ -110,7 +74,7 @@ uint64 walkaddr(ptb_t pagetable, uint64 va)
 }
 
 // 创建va,pa映射
-void mapper(ptb_t pagetable, uint64 va, uint64 pa, int size, uint16 flags)
+int mapper(ptb_t pagetable, uint64 va, uint64 pa, int size, uint16 flags)
 {
     flags = PTE_FLAGS(flags);
     pte_t *p_pte = walk(pagetable, va, 1);
@@ -124,6 +88,7 @@ void mapper(ptb_t pagetable, uint64 va, uint64 pa, int size, uint16 flags)
             p_pte = walk(pagetable, va + (i+1)*PAGE_SIZE,1); 
         }
     }
+    return 0;
 }
 
 // 撤销va,pa映射
@@ -158,6 +123,42 @@ ptb_t creat_pagetable(){
         return -1;
     }
     return pagetable;
+}
+
+// Given a parent process's page table, copy
+// its memory into a child's page table.
+// Copies both the page table and the
+// physical memory.
+// returns 0 on success, -1 on failure.
+// frees any allocated pages on failure.
+int
+uvmcopy(ptb_t old, ptb_t new, uint64 sz)
+{
+  pte_t *pte;
+  uint64 pa, i;
+  uint16 flags;
+  char *mem;
+
+  for(i = 0; i < sz; i += PAGE_SIZE){
+    if((pte = walk(old, i, 0)) == 0)
+      panic("uvmcopy: pte should exist");
+    if((*pte & PTE_V) == 0)
+      panic("uvmcopy: page not present");
+    pa = PTE2PA(*pte);
+    flags = PTE_FLAGS(*pte);
+    if((mem = buddy_alloc(1)) == -1)
+      goto err;
+    memcopy(mem, (char*)pa, PAGE_SIZE);
+    if(mapper(new, i, (uint64)mem, PAGE_SIZE, flags) != 0){
+      buddy_free(mem);
+      goto err;
+    }
+  }
+  return 0;
+
+ err:
+  unmap(new, 0, i / PAGE_SIZE, 1);
+  return -1;
 }
 
 
